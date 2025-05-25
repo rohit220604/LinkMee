@@ -24,6 +24,9 @@ export const Navbar = () => {
             <li className="nav-item">
               <Link className="nav-link" to="/about">About us</Link>
             </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/dashboard">Dashboard</Link>
+            </li>
           </ul>
           <button className="btn btn-outline-success btn-lg" type="submit">Login</button>
         </div>

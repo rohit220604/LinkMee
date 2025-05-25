@@ -18,7 +18,7 @@ const Login = () => {
 
         {/* Right Side - Auth Box */}
         <div className="col-md-6 d-flex justify-content-center">
-        <div className="card px-5 py-6 w-100" style={{ maxWidth: '550px', minHeight: '700px' }}>
+        <div className="card px-5 py-6 w-100" style={{ maxWidth: '450px', minHeight: '550px' }}>
             {/* Title */}
             <h3 className="text-center mb-5 display-6 my-5">
               {mode === 'signin' && 'Login'}
