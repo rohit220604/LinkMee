@@ -1,8 +1,16 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
-const registerUser = async (req, res) => {
-  console.log('Register request body:', req.body);  // <== Add this line
+const generateToken = (user) => {
+  return jwt.sign(
+    { user: { id: user._id } },  
+    process.env.JWT_SECRET,          
+    { expiresIn: '1d' }
+  );
+};
+
+const registerUser = async (req, res) => {  
+  console.log('Register request body:', req.body);
 
   const { username, email, password } = req.body;
 
@@ -15,13 +23,16 @@ const registerUser = async (req, res) => {
     const user = new User({ username, email, password });
     await user.save();
 
-    res.status(201).json({ message: 'User registered successfully' });
+    res.status(201).json({
+      message: 'User registered successfully',
+      token: generateToken(user),
+    });
+    
   } catch (error) {
-    console.error('Error in registerUser:', error); // <== Add this line
+    console.error('Error in registerUser:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
 
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
@@ -32,12 +43,12 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Create a JWT token (replace 'your_jwt_secret' with a real secret)
-    const token = jwt.sign({ id: user._id }, 'your_jwt_secret', { expiresIn: '1d' });
+    const token = generateToken(user);
 
     res.status(200).json({ message: 'Login successful', token });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 module.exports = { registerUser, loginUser };

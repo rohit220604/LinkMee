@@ -4,11 +4,18 @@ import axios from 'axios';
 const ProfileCard = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('User not authenticated.');
+        setLoading(false);
+        return;
+      }
+
       try {
-        const token = localStorage.getItem('token');
         const res = await axios.get('http://localhost:5000/api/users/profile', {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -16,8 +23,8 @@ const ProfileCard = () => {
         });
         setProfile(res.data);
       } catch (err) {
-        console.error('Failed to fetch profile:', err);
-        setProfile(null);
+        setError('Failed to fetch profile. Please try again.');
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -26,9 +33,8 @@ const ProfileCard = () => {
     fetchProfile();
   }, []);
 
-  if (loading) {
-    return <p className="text-center mt-5">Loading profile...</p>;
-  }
+  if (loading) return <p className="text-center mt-5">Loading profile...</p>;
+  if (error) return <p className="text-center mt-5 text-danger">{error}</p>;
 
   if (!profile || !profile.username) {
     return <p className="text-center mt-5">Nothing to view.</p>;
@@ -57,11 +63,26 @@ const ProfileCard = () => {
               border: '4px solid #0d6efd',
             }}
           />
-          <h3 className="card-title mb-2 fw-semibold">{profile.username}</h3>
+          {/* Name and username */}
+          <h2 className="fw-bold mb-1">{profile.name || profile.username}</h2>
+          <h5 className="text-primary mb-3">@{profile.username}</h5>
+
+          {/* Bio */}
+          {profile.bio && (
+            <p
+              className="text-secondary mb-4 fs-5"
+              style={{ fontStyle: 'italic', maxWidth: '450px', margin: 'auto' }}
+            >
+              {profile.bio}
+            </p>
+          )}
+
+          {/* Email */}
           <p className="text-muted mb-4 fs-5">{profile.email}</p>
 
           <hr className="my-4" />
 
+          {/* Links */}
           {profile.links && profile.links.length > 0 ? (
             <div className="d-grid gap-3">
               {profile.links.map((link, idx) => (

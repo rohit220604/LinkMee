@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [mode, setMode] = useState('signin'); // modes: signin, signup, forgot
   const [form, setForm] = useState({ email: '', username: '', password: '' });
   const [message, setMessage] = useState('');
-
+  const navigate = useNavigate();
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -30,6 +31,7 @@ const Login = () => {
         localStorage.setItem('token', res.data.token);
         window.dispatchEvent(new Event('authChange'));
         setMessage('Login successful!');
+        navigate('/dashboard');
       }
     } catch (err) {
       setMessage(err.response?.data?.message || 'Error occurred');

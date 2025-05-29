@@ -1,28 +1,100 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ProfileCard from './ProfileCard';
+import axios from 'axios';
 
 const Dashboard = () => {
   const [selectedTab, setSelectedTab] = useState('view');
-  const [links, setLinks] = useState([
-    { id: 1, title: 'GitHub', url: 'https://github.com/yourprofile' },
-    { id: 2, title: 'LinkedIn', url: 'https://linkedin.com/in/yourprofile' },
-  ]);
+  const [links, setLinks] = useState([]);
   const [newTitle, setNewTitle] = useState('');
   const [newUrl, setNewUrl] = useState('');
+  const [name, setName] = useState('Loading...');
+  const [bio, setBio] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('/images.jpg');
+  const token = localStorage.getItem('token');
 
-  const handleAddLink = () => {
-    if (newTitle && newUrl) {
-      const newLink = {
-        id: Date.now(),
-        title: newTitle,
-        url: newUrl
-      };
-      setLinks([...links, newLink]);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [profileRes, linksRes] = await Promise.all([
+          axios.get('/api/users/profile', {
+            headers: { Authorization: `Bearer ${token}` },
+            withCredentials: true,
+          }),
+          axios.get('/api/links', {
+            headers: { Authorization: `Bearer ${token}` },
+            withCredentials: true,
+          }),
+        ]);
+
+        setName(profileRes.data.username);
+        setBio(profileRes.data.bio || '');
+        setAvatarUrl(profileRes.data.avatarUrl || '/images.jpg');
+        setLinks(linksRes.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        if (error.response && error.response.status === 401) {
+          alert('Session expired. Please log in again.');
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }
+      }
+    };
+
+    if (token) fetchData();
+  }, [token]);
+
+  const handleAddLink = async () => {
+    if (!newTitle || !newUrl) return;
+
+    try {
+      const res = await axios.post(
+        '/api/links',
+        { name: newTitle, url: newUrl },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
+        }
+      );
+      setLinks([...links, res.data]);
       setNewTitle('');
       setNewUrl('');
       setSelectedTab('view');
+    } catch (error) {
+      console.error('Error adding link:', error);
     }
   };
+
+  const handleDeleteLink = async (id) => {
+    try {
+      await axios.delete(`/api/links/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
+      });
+      setLinks(links.filter((link) => link._id !== id));
+    } catch (err) {
+      console.error('Failed to delete link:', err);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      await axios.put(
+        '/api/users/profile',
+        { name, bio, avatarUrl },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
+        }
+      );
+      alert('Profile saved successfully!');
+      // Refetch profile data or switch to profile view
+      setSelectedTab('profile');
+    } catch (err) {
+      console.error('Failed to save profile:', err);
+      alert('Failed to save profile');
+    }
+  };
+  
 
   return (
     <div className="container-fluid">
@@ -30,24 +102,23 @@ const Dashboard = () => {
         {/* Sidebar */}
         <div className="col-md-3 bg-light p-4 border-end">
           <h4 className="mb-4">Dashboard</h4>
-          <button
-            className={`btn w-100 mb-3 ${selectedTab === 'profile' ? 'btn-primary' : 'btn-outline-primary'}`}
-            onClick={() => setSelectedTab('profile')}
-          >
-            View Profile
-          </button>
-          <button
-            className={`btn w-100 mb-3 ${selectedTab === 'create' ? 'btn-primary' : 'btn-outline-primary'}`}
-            onClick={() => setSelectedTab('create')}
-          >
-            Create Link
-          </button>
-          <button
-            className={`btn w-100 ${selectedTab === 'view' ? 'btn-primary' : 'btn-outline-primary'}`}
-            onClick={() => setSelectedTab('view')}
-          >
-            View Links
-          </button>
+          {['profile', 'editProfile', 'create', 'view'].map((tab) => (
+            <button
+              key={tab}
+              className={`btn w-100 mb-3 ${
+                selectedTab === tab ? 'btn-primary' : 'btn-outline-primary'
+              }`}
+              onClick={() => setSelectedTab(tab)}
+            >
+              {tab === 'profile'
+                ? 'View Profile'
+                : tab === 'editProfile'
+                ? 'Edit Profile'
+                : tab === 'create'
+                ? 'Create Link'
+                : 'View Links'}
+            </button>
+          ))}
         </div>
 
         {/* Main Content */}
@@ -55,12 +126,43 @@ const Dashboard = () => {
           {selectedTab === 'profile' && (
             <div>
               <h3 className="mb-4">Your Public Profile</h3>
-              <ProfileCard
-                name="Rohit Jaliminchi"
-                bio="Developer | Creator of LinkMe"
-                avatarUrl="/images.jpg"
-                links={links}
-              />
+              <ProfileCard name={name} bio={bio} avatarUrl={avatarUrl} links={links} />
+            </div>
+          )}
+
+          {selectedTab === 'editProfile' && (
+            <div>
+              <h3 className="mb-4">Edit Profile</h3>
+              <div className="mb-3">
+                <label className="form-label">Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Bio</label>
+                <textarea
+                  className="form-control"
+                  rows="3"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                />
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Profile Picture URL</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={avatarUrl}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                />
+              </div>
+              <button className="btn btn-success" onClick={handleSaveProfile}>
+                Save Profile
+              </button>
             </div>
           )}
 
@@ -101,13 +203,22 @@ const Dashboard = () => {
               ) : (
                 <ul className="list-group">
                   {links.map((link) => (
-                    <li key={link.id} className="list-group-item d-flex justify-content-between align-items-center">
+                    <li
+                      key={link._id}
+                      className="list-group-item d-flex justify-content-between align-items-center"
+                    >
                       <div>
-                        <strong>{link.title}</strong> -{' '}
+                        <strong>{link.name}</strong> -{' '}
                         <a href={link.url} target="_blank" rel="noopener noreferrer">
                           {link.url}
                         </a>
                       </div>
+                      <button
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => handleDeleteLink(link._id)}
+                      >
+                        Delete
+                      </button>
                     </li>
                   ))}
                 </ul>
