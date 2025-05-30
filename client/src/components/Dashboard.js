@@ -16,13 +16,11 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         const [profileRes, linksRes] = await Promise.all([
-          axios.get('/api/users/profile', {
-            headers: { Authorization: `Bearer ${token}` },
-            withCredentials: true,
+          axios.get('http://localhost:5000/api/users/profile', {
+            headers: { Authorization: `Bearer ${token}` }
           }),
-          axios.get('/api/links', {
-            headers: { Authorization: `Bearer ${token}` },
-            withCredentials: true,
+          axios.get('http://localhost:5000/api/links', {
+            headers: { Authorization: `Bearer ${token}` }
           }),
         ]);
 
@@ -45,17 +43,16 @@ const Dashboard = () => {
 
   const handleAddLink = async () => {
     if (!newTitle || !newUrl) return;
-
+  
     try {
       const res = await axios.post(
-        '/api/links',
+        'http://localhost:5000/api/links/add',
         { name: newTitle, url: newUrl },
         {
-          headers: { Authorization: `Bearer ${token}` },
-          withCredentials: true,
+          headers: { Authorization: `Bearer ${token}` }
         }
       );
-      setLinks([...links, res.data]);
+      setLinks(res.data.links);  // <-- use updated list from backend
       setNewTitle('');
       setNewUrl('');
       setSelectedTab('view');
@@ -63,12 +60,12 @@ const Dashboard = () => {
       console.error('Error adding link:', error);
     }
   };
+  
 
   const handleDeleteLink = async (id) => {
     try {
-      await axios.delete(`/api/links/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true,
+      await axios.delete(`http://localhost:5000/api/links/${id}`, { 
+        headers: { Authorization: `Bearer ${token}` }
       });
       setLinks(links.filter((link) => link._id !== id));
     } catch (err) {
@@ -79,11 +76,10 @@ const Dashboard = () => {
   const handleSaveProfile = async () => {
     try {
       await axios.put(
-        '/api/users/profile',
+        'http://localhost:5000/api/users/profile',
         { name, bio, avatarUrl },
         {
-          headers: { Authorization: `Bearer ${token}` },
-          withCredentials: true,
+          headers: { Authorization: `Bearer ${token}` }
         }
       );
       alert('Profile saved successfully!');
@@ -214,11 +210,14 @@ const Dashboard = () => {
                         </a>
                       </div>
                       <button
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleDeleteLink(link._id)}
-                      >
-                        Delete
-                      </button>
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => {
+                        console.log(link._id);
+                        handleDeleteLink(link._id);
+                      }}
+                    >
+                      Delete
+                    </button>
                     </li>
                   ))}
                 </ul>

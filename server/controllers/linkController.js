@@ -34,4 +34,27 @@ const getLinks = async (req, res) => {
   }
 };
 
-module.exports = { addLink, getLinks };
+const deleteLink = async (req, res) => {
+  try {
+    const userId = req.user.id; 
+    const linkId = req.params.id;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const initialLength = user.links.length;
+    user.links = user.links.filter(link => link._id.toString() !== linkId);
+
+    if (user.links.length === initialLength) {
+      return res.status(404).json({ message: 'Link not found' });
+    }
+
+    await user.save();
+    res.status(200).json({ message: 'Link deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+module.exports = { addLink, getLinks ,deleteLink};
