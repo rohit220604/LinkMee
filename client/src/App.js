@@ -5,6 +5,7 @@ import Login from './components/Login';
 import About from './components/About';
 import { Footer } from './components/Footer';
 import Dashboard from './components/Dashboard';
+import Home from './components/Home';
 
 const App = () => {
   return (
@@ -14,7 +15,7 @@ const App = () => {
         
         <div className="flex-grow-1">
           <Routes>
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<Home/>} />
             <Route path="/login" element={<Login />} /> 
             <Route path="/about" element={<About />} />
             <Route path="/dashboard" element={<Dashboard />} />

@@ -11,19 +11,18 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   name: { type: String },
-  bio: { type: String },           // User bio
-  avatarUrl: { type: String },     // Profile picture URL
-  links: [
-    {
-      name: { type: String, required: true },
-      url: { type: String, required: true },
-    }
-  ]
+  bio: { type: String },
+  avatar: {
+    data: Buffer,
+    contentType: String,
+  },
+  links: [linkSchema],
+  isPublic: { type: Boolean, default: true }, // Profile visibility flag
 }, {
   timestamps: true,
 });
 
-// Password hash middleware etc. (unchanged)
+// Password hash middleware
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
@@ -31,6 +30,7 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+// Password comparison method
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return bcrypt.compare(enteredPassword, this.password);
 };

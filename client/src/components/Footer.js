@@ -11,7 +11,7 @@ export const Footer = () => {
           </div>
           <div className="col-md-6 text-md-end">
             <a
-              href="https://github.com/yourusername"
+              href="https://github.com/rohit220604"
               target="_blank"
               rel="noopener noreferrer"
               className="text-light me-3 fs-4"

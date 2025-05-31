@@ -1,29 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
-const { getProfile, updateProfile } = require('../controllers/userController');
+const { getProfile, updateProfile, uploadAvatar, getAvatar, deleteAvatar,getAllPublicProfiles } = require('../controllers/userController');
 const User = require('../models/User');
 
-router.get('/profile', protect, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select('-password');
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.json({
-      username: user.username,
-      email: user.email,
-      name: user.name,
-      bio: user.bio,
-      avatarUrl: user.avatarUrl,
-      links: user.links || [],
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+const multer = require('multer'); 
+const upload = multer({ storage: multer.memoryStorage() });
+  
+router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
+router.post('/profile/avatar', protect, upload.single('avatar'), uploadAvatar);
+router.get('/profile/avatar', protect, getAvatar);
+router.delete('/profile/avatar', protect, deleteAvatar);
+router.get('/public-profiles', getAllPublicProfiles);
 
 module.exports = router;

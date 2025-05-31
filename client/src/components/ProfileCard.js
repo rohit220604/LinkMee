@@ -5,6 +5,7 @@ const ProfileCard = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState('/images.jpg');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -33,6 +34,29 @@ const ProfileCard = () => {
     fetchProfile();
   }, []);
 
+  useEffect(() => {
+    const fetchAvatar = async () => {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await axios.get('http://localhost:5000/api/users/profile/avatar', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: 'blob',
+        });
+        const imageUrl = URL.createObjectURL(response.data);
+        setAvatarUrl(imageUrl);
+      } catch (err) {
+        console.error('Error fetching avatar:', err);
+        setAvatarUrl('/images.jpg');
+      }
+    };
+
+    if (profile) {
+      fetchAvatar();
+    }
+  }, [profile]);
+
   if (loading) return <p className="text-center mt-5">Loading profile...</p>;
   if (error) return <p className="text-center mt-5 text-danger">{error}</p>;
 
@@ -53,7 +77,7 @@ const ProfileCard = () => {
       >
         <div className="card-body text-center">
           <img
-            src={'/default-avatar.png'}
+            src={avatarUrl}
             alt={profile.username}
             className="rounded-circle mb-4 shadow"
             style={{
@@ -62,7 +86,12 @@ const ProfileCard = () => {
               objectFit: 'cover',
               border: '4px solid #0d6efd',
             }}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/images.jpg';
+            }}
           />
+
           {/* Name and username */}
           <h2 className="fw-bold mb-1">{profile.name || profile.username}</h2>
           <h5 className="text-primary mb-3">@{profile.username}</h5>

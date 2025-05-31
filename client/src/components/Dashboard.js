@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import ProfileCard from './ProfileCard';
 import axios from 'axios';
+import EditProfile from './EditProfile';
 
 const Dashboard = () => {
   const [selectedTab, setSelectedTab] = useState('view');
   const [links, setLinks] = useState([]);
   const [newTitle, setNewTitle] = useState('');
   const [newUrl, setNewUrl] = useState('');
-  const [name, setName] = useState('Loading...');
+  const [username, setUsername] = useState('Loading...');
+  const [name, setName] = useState('');
   const [bio, setBio] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('/images.jpg');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [avatarFile, setAvatarFile] = useState(null);
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -17,17 +20,20 @@ const Dashboard = () => {
       try {
         const [profileRes, linksRes] = await Promise.all([
           axios.get('http://localhost:5000/api/users/profile', {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get('http://localhost:5000/api/links', {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
 
-        setName(profileRes.data.username);
-        setBio(profileRes.data.bio || '');
-        setAvatarUrl(profileRes.data.avatarUrl || '/images.jpg');
-        setLinks(linksRes.data);
+        const profile = profileRes.data;
+        setUsername(profile.username || '');
+        setName(profile.name || '');
+        setBio(profile.bio || '');
+        setLinks(linksRes.data || []);
+
+        setAvatarUrl(`http://localhost:5000/api/users/profile/avatar?${Date.now()}`);
       } catch (error) {
         console.error('Error fetching data:', error);
         if (error.response && error.response.status === 401) {
@@ -41,35 +47,41 @@ const Dashboard = () => {
     if (token) fetchData();
   }, [token]);
 
+  useEffect(() => {
+    return () => {
+      if (avatarFile && avatarFile.preview) {
+        URL.revokeObjectURL(avatarFile.preview);
+      }
+    };
+  }, [avatarFile]);
+
   const handleAddLink = async () => {
-    if (!newTitle || !newUrl) return;
-  
+    if (!newTitle.trim() || !newUrl.trim()) return;
+
     try {
       const res = await axios.post(
         'http://localhost:5000/api/links/add',
         { name: newTitle, url: newUrl },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      setLinks(res.data.links);  // <-- use updated list from backend
+      setLinks(res.data.links);
       setNewTitle('');
       setNewUrl('');
-      setSelectedTab('view');
     } catch (error) {
       console.error('Error adding link:', error);
+      alert('Failed to add link.');
     }
   };
-  
 
   const handleDeleteLink = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/links/${id}`, { 
-        headers: { Authorization: `Bearer ${token}` }
+      await axios.delete(`http://localhost:5000/api/links/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       setLinks(links.filter((link) => link._id !== id));
     } catch (err) {
       console.error('Failed to delete link:', err);
+      alert('Failed to delete link.');
     }
   };
 
@@ -77,20 +89,32 @@ const Dashboard = () => {
     try {
       await axios.put(
         'http://localhost:5000/api/users/profile',
-        { name, bio, avatarUrl },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+        { name, bio },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append('avatar', avatarFile);
+
+        await axios.post('http://localhost:5000/api/users/profile/avatar', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setAvatarUrl(`http://localhost:5000/api/users/profile/avatar?${Date.now()}`);
+        setAvatarFile(null);
+      }
+
       alert('Profile saved successfully!');
-      // Refetch profile data or switch to profile view
       setSelectedTab('profile');
     } catch (err) {
       console.error('Failed to save profile:', err);
       alert('Failed to save profile');
     }
   };
-  
 
   return (
     <div className="container-fluid">
@@ -98,7 +122,7 @@ const Dashboard = () => {
         {/* Sidebar */}
         <div className="col-md-3 bg-light p-4 border-end">
           <h4 className="mb-4">Dashboard</h4>
-          {['profile', 'editProfile', 'create', 'view'].map((tab) => (
+          {['profile', 'editProfile', 'view'].map((tab) => (
             <button
               key={tab}
               className={`btn w-100 mb-3 ${
@@ -110,8 +134,6 @@ const Dashboard = () => {
                 ? 'View Profile'
                 : tab === 'editProfile'
                 ? 'Edit Profile'
-                : tab === 'create'
-                ? 'Create Link'
                 : 'View Links'}
             </button>
           ))}
@@ -122,72 +144,31 @@ const Dashboard = () => {
           {selectedTab === 'profile' && (
             <div>
               <h3 className="mb-4">Your Public Profile</h3>
-              <ProfileCard name={name} bio={bio} avatarUrl={avatarUrl} links={links} />
+              <ProfileCard
+                name={name || username}
+                bio={bio}
+                avatarUrl={avatarUrl}
+                links={links}
+                username={username}
+              />
             </div>
           )}
 
           {selectedTab === 'editProfile' && (
             <div>
               <h3 className="mb-4">Edit Profile</h3>
-              <div className="mb-3">
-                <label className="form-label">Name</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Bio</label>
-                <textarea
-                  className="form-control"
-                  rows="3"
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Profile Picture URL</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                />
-              </div>
-              <button className="btn btn-success" onClick={handleSaveProfile}>
-                Save Profile
-              </button>
-            </div>
-          )}
-
-          {selectedTab === 'create' && (
-            <div>
-              <h3>Create New Link</h3>
-              <div className="mb-3">
-                <label className="form-label">Link Title</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="e.g., My Portfolio"
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Link URL</label>
-                <input
-                  type="url"
-                  className="form-control"
-                  value={newUrl}
-                  onChange={(e) => setNewUrl(e.target.value)}
-                  placeholder="https://example.com"
-                />
-              </div>
-              <button className="btn btn-success" onClick={handleAddLink}>
-                Add Link
-              </button>
+              <EditProfile
+                name={name}
+                setName={setName}
+                bio={bio}
+                setBio={setBio}
+                avatarUrl={avatarUrl}
+                setAvatarUrl={setAvatarUrl}
+                avatarFile={avatarFile}
+                setAvatarFile={setAvatarFile}
+                handleSaveProfile={handleSaveProfile}
+                setSelectedTab={setSelectedTab}
+              />
             </div>
           )}
 
@@ -197,7 +178,7 @@ const Dashboard = () => {
               {links.length === 0 ? (
                 <p className="text-muted">No links added yet.</p>
               ) : (
-                <ul className="list-group">
+                <ul className="list-group mb-4">
                   {links.map((link) => (
                     <li
                       key={link._id}
@@ -210,18 +191,43 @@ const Dashboard = () => {
                         </a>
                       </div>
                       <button
-                      className="btn btn-sm btn-outline-danger"
-                      onClick={() => {
-                        console.log(link._id);
-                        handleDeleteLink(link._id);
-                      }}
-                    >
-                      Delete
-                    </button>
+                        className="btn btn-danger btn-sm"
+                        onClick={() => handleDeleteLink(link._id)}
+                      >
+                        Delete
+                      </button>
                     </li>
                   ))}
                 </ul>
               )}
+
+              {/* Create Link Form Below Links */}
+              <div>
+                <h4>Create New Link</h4>
+                <div className="mb-3">
+                  <label className="form-label">Link Title</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    placeholder="e.g., My Portfolio"
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Link URL</label>
+                  <input
+                    type="url"
+                    className="form-control"
+                    value={newUrl}
+                    onChange={(e) => setNewUrl(e.target.value)}
+                    placeholder="https://example.com"
+                  />
+                </div>
+                <button className="btn btn-success" onClick={handleAddLink}>
+                  Add Link
+                </button>
+              </div>
             </div>
           )}
         </div>
