@@ -17,12 +17,11 @@ const userSchema = new mongoose.Schema({
     contentType: String,
   },
   links: [linkSchema],
-  isPublic: { type: Boolean, default: true }, // Profile visibility flag
+  isPublic: { type: Boolean, default: true }, 
 }, {
   timestamps: true,
 });
 
-// Password hash middleware
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
@@ -30,7 +29,6 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// Password comparison method
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return bcrypt.compare(enteredPassword, this.password);
 };

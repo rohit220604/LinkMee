@@ -33,7 +33,7 @@ const Dashboard = () => {
         setBio(profile.bio || '');
         setLinks(linksRes.data || []);
 
-        setAvatarUrl(`http://localhost:5000/api/users/profile/avatar?${Date.now()}`);
+        setAvatarUrl(`http://localhost:5000${profile.avatarUrl}`);
       } catch (error) {
         console.error('Error fetching data:', error);
         if (error.response && error.response.status === 401) {
@@ -104,7 +104,7 @@ const Dashboard = () => {
           },
         });
 
-        setAvatarUrl(`http://localhost:5000/api/users/profile/avatar?${Date.now()}`);
+        setAvatarUrl(`http://localhost:5000${avatarUrl}`);
         setAvatarFile(null);
       }
 

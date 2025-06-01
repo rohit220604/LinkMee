@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const EditProfile = () => {
-  const [avatarUrl, setAvatarUrl] = useState('/images.jpg');
+  const [avatarUrl, setAvatarUrl] = useState('/images');
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
@@ -24,19 +24,18 @@ const EditProfile = () => {
         const profileRes = await axios.get('http://localhost:5000/api/users/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         setName(profileRes.data.name || '');
         setBio(profileRes.data.bio || '');
         setIsPublic(profileRes.data.isPublic ?? true);
-
-        const avatarRes = await axios.get('http://localhost:5000/api/users/profile/avatar', {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: 'blob',
-        });
-        const imageUrl = URL.createObjectURL(avatarRes.data);
-        setAvatarUrl(imageUrl);
+        setAvatarUrl(
+          profileRes.data.avatarUrl 
+            ? `http://localhost:5000${profileRes.data.avatarUrl}` 
+            : '/images.jpg'
+        );
+        
       } catch (err) {
         console.error('Error fetching profile:', err);
-        setAvatarUrl('/images.jpg');
       }
     };
     fetchProfile();
@@ -109,6 +108,22 @@ const EditProfile = () => {
     setSaving(true);
     setMessage(null);
     try {
+      // Upload avatar if selected
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append('avatar', selectedFile);
+        await axios.post('http://localhost:5000/api/users/profile/avatar', formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        setAvatarUrl(previewUrl);
+        setSelectedFile(null);
+        setPreviewUrl(null);
+      }
+
+      // Update profile details
       await axios.put(
         'http://localhost:5000/api/users/profile',
         { name, bio, isPublic },
@@ -116,6 +131,7 @@ const EditProfile = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+
       setMessage('Profile info saved successfully.');
     } catch (err) {
       console.error('Failed to save profile:', err);
@@ -141,12 +157,6 @@ const EditProfile = () => {
       />
 
       <input type="file" accept="image/*" onChange={handleFileChange} className="form-control mb-3" />
-
-      {selectedFile && (
-        <button onClick={handleUpload} className="btn btn-primary mb-3" disabled={uploading}>
-          {uploading ? 'Uploading...' : 'Upload Photo'}
-        </button>
-      )}
 
       {avatarUrl !== '/images.jpg' && !selectedFile && (
         <button onClick={handleDeleteAvatar} className="btn btn-danger mb-3" disabled={deleting}>

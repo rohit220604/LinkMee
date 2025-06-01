@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
+function extractDomain(url) {
+  try {
+    const domain = new URL(url).hostname.replace('www.', '');
+    return domain;
+  } catch (e) {
+    return '';
+  }
+}
+
 const ProfileCard = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,7 +24,6 @@ const ProfileCard = () => {
         setLoading(false);
         return;
       }
-
       try {
         const res = await axios.get('http://localhost:5000/api/users/profile', {
           headers: {
@@ -24,42 +32,49 @@ const ProfileCard = () => {
         });
         setProfile(res.data);
       } catch (err) {
-        setError('Failed to fetch profile. Please try again.');
         console.error(err);
+        setError('Failed to fetch profile. Please try again.');
       } finally {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, []);
 
   useEffect(() => {
+    if (!profile || !profile.avatarUrl) return;
+
+    let objectUrl = null;
+    const token = localStorage.getItem('token');
+
     const fetchAvatar = async () => {
-      const token = localStorage.getItem('token');
       try {
-        const response = await axios.get('http://localhost:5000/api/users/profile/avatar', {
+
+        const response = await axios.get(`http://localhost:5000${profile.avatarUrl}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
           responseType: 'blob',
         });
-        const imageUrl = URL.createObjectURL(response.data);
-        setAvatarUrl(imageUrl);
+        objectUrl = URL.createObjectURL(response.data);
+        setAvatarUrl(objectUrl);
       } catch (err) {
         console.error('Error fetching avatar:', err);
         setAvatarUrl('/images.jpg');
       }
     };
 
-    if (profile) {
-      fetchAvatar();
-    }
+    fetchAvatar();
+
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
   }, [profile]);
 
   if (loading) return <p className="text-center mt-5">Loading profile...</p>;
   if (error) return <p className="text-center mt-5 text-danger">{error}</p>;
-
   if (!profile || !profile.username) {
     return <p className="text-center mt-5">Nothing to view.</p>;
   }
@@ -92,11 +107,9 @@ const ProfileCard = () => {
             }}
           />
 
-          {/* Name and username */}
           <h2 className="fw-bold mb-1">{profile.name || profile.username}</h2>
           <h5 className="text-primary mb-3">@{profile.username}</h5>
 
-          {/* Bio */}
           {profile.bio && (
             <p
               className="text-secondary mb-4 fs-5"
@@ -106,25 +119,39 @@ const ProfileCard = () => {
             </p>
           )}
 
-          {/* Email */}
           <p className="text-muted mb-4 fs-5">{profile.email}</p>
 
           <hr className="my-4" />
 
-          {/* Links */}
           {profile.links && profile.links.length > 0 ? (
             <div className="d-grid gap-3">
-              {profile.links.map((link, idx) => (
-                <a
-                  key={idx}
-                  href={link.url}
-                  className="btn btn-outline-primary py-2 fs-5 fw-medium shadow-sm link-button"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {link.name}
-                </a>
-              ))}
+              {profile.links.map((link, idx) => {
+                const domain = extractDomain(link.url);
+                const faviconUrl = domain
+                  ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32`
+                  : '/logo192.png';
+                return (
+                  <a
+                    key={idx}
+                    href={link.url}
+                    className="btn btn-outline-primary py-2 fs-5 fw-medium shadow-sm d-flex align-items-center justify-content-center"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <img
+                      src={faviconUrl}
+                      alt={link.name}
+                      className="me-2"
+                      style={{ width: '24px', height: '24px' }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/logo192.png';
+                      }}
+                    />
+                    <span>{link.name}</span>
+                  </a>
+                );
+              })}
             </div>
           ) : (
             <p className="text-muted">No links added yet.</p>
