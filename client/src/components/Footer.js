@@ -20,7 +20,7 @@ export const Footer = () => {
               <i className="bi bi-github"></i>
             </a>
             <a
-              href="https://twitter.com/yourusername"
+              href="https://twitter.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-light me-3 fs-4"
@@ -29,7 +29,7 @@ export const Footer = () => {
               <i className="bi bi-twitter"></i>
             </a>
             <a
-              href="https://linkedin.com/in/yourusername"
+              href="https://linkedin.com/in/rohit-jaliminchi-98555224b"
               target="_blank"
               rel="noopener noreferrer"
               className="text-light fs-4"
