@@ -18,9 +18,23 @@ const userSchema = new mongoose.Schema({
   },
   links: [linkSchema],
   isPublic: { type: Boolean, default: true }, 
+  isVerified: {type: Boolean, default: false }
 }, {
   timestamps: true,
 });
+
+const otpSchema = new mongoose.Schema({
+  email: { type: String, required: true },
+  otp: { type: String, required: true },
+  expiresAt: { type: Date, required: true },
+  purpose: { 
+    type: String, 
+    required: true,
+    enum: ['signup', 'reset'] // Only allow these purposes
+  }
+});
+
+otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
@@ -33,4 +47,7 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
   return bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.model('User', userSchema);
+const User = mongoose.model('User', userSchema);
+const Otp = mongoose.model('Otp', otpSchema);
+
+module.exports = { User, Otp };

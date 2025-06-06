@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const EditProfile = () => {
-  const [avatarUrl, setAvatarUrl] = useState('/images');
+  const [avatarUrl, setAvatarUrl] = useState('/images.jpg');
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
@@ -17,41 +17,39 @@ const EditProfile = () => {
 
   const token = localStorage.getItem('token');
 
+  // Fetch profile data
+  const fetchProfile = async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get('http://localhost:5000/api/users/profile', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setName(res.data.name || '');
+      setBio(res.data.bio || '');
+      setIsPublic(res.data.isPublic ?? true);
+      setAvatarUrl(
+        res.data.avatarUrl
+          ? `http://localhost:5000${res.data.avatarUrl}`
+          : '/images.jpg'
+      );
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+    }
+  };
+
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!token) return;
-      try {
-        const profileRes = await axios.get('http://localhost:5000/api/users/profile', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setName(profileRes.data.name || '');
-        setBio(profileRes.data.bio || '');
-        setIsPublic(profileRes.data.isPublic ?? true);
-        setAvatarUrl(
-          profileRes.data.avatarUrl 
-            ? `http://localhost:5000${profileRes.data.avatarUrl}` 
-            : '/images.jpg'
-        );
-        
-      } catch (err) {
-        console.error('Error fetching profile:', err);
-      }
-    };
     fetchProfile();
-
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
-  }, [token, previewUrl]);
+  }, [token]);
 
   const handleFileChange = (e) => {
     setMessage(null);
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
-      const preview = URL.createObjectURL(file);
-      setPreviewUrl(preview);
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
@@ -70,7 +68,8 @@ const EditProfile = () => {
         },
       });
 
-      setAvatarUrl(previewUrl);
+      // Refresh profile to get updated avatarUrl
+      await fetchProfile();
       setSelectedFile(null);
       setPreviewUrl(null);
       setMessage('Profile photo uploaded successfully.');
@@ -84,7 +83,6 @@ const EditProfile = () => {
 
   const handleDeleteAvatar = async () => {
     if (!window.confirm('Are you sure you want to delete your profile photo?')) return;
-
     setDeleting(true);
     setMessage(null);
     try {
@@ -92,7 +90,8 @@ const EditProfile = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setAvatarUrl('/images.jpg');
+      // Refresh profile to remove avatarUrl
+      await fetchProfile();
       setSelectedFile(null);
       setPreviewUrl(null);
       setMessage('Profile photo deleted successfully.');
@@ -118,20 +117,17 @@ const EditProfile = () => {
             'Content-Type': 'multipart/form-data',
           },
         });
-        setAvatarUrl(previewUrl);
-        setSelectedFile(null);
-        setPreviewUrl(null);
       }
-
-      // Update profile details
+      
       await axios.put(
         'http://localhost:5000/api/users/profile',
         { name, bio, isPublic },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      await fetchProfile();
+      setSelectedFile(null);
+      setPreviewUrl(null);
       setMessage('Profile info saved successfully.');
     } catch (err) {
       console.error('Failed to save profile:', err);

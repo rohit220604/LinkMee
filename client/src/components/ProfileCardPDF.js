@@ -5,88 +5,152 @@ import {
   View,
   Document,
   StyleSheet,
-  PDFDownloadLink,
   Image,
   Link,
 } from '@react-pdf/renderer';
 
 const styles = StyleSheet.create({
   page: {
-    padding: 24,
-    fontSize: 12,
+    backgroundColor: '#f8f9fa',
+    padding: 0,
     fontFamily: 'Helvetica',
   },
-  section: {
-    marginBottom: 16,
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 40,
+    width: 420,
+    minHeight: 620,
+    alignItems: 'center',
+    margin: '36pt auto',
+    boxShadow: '0 4px 32px rgba(0,0,0,0.08)',
   },
-  heading: {
-    fontSize: 18,
-    marginBottom: 8,
+  avatarBorder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 4,
+    borderColor: '#0d6efd',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
+    display: 'flex',
   },
-  linkRow: {
+  avatar: {
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    objectFit: 'cover',
+  },
+  name: {
+    fontSize: 24,
+    fontWeight: 700,
+    marginBottom: 2,
+    textAlign: 'center',
+    textTransform: 'lowercase',
+  },
+  username: {
+    fontSize: 14,
+    color: '#0d6efd',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  bio: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    color: '#6c757d',
+    marginBottom: 10,
+    textAlign: 'center',
+    maxWidth: 320,
+    alignSelf: 'center',
+  },
+  email: {
+    fontSize: 13,
+    color: '#adb5bd',
+    marginBottom: 18,
+    textAlign: 'center',
+  },
+  hr: {
+    width: '100%',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+    marginVertical: 18,
+  },
+  linksSection: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  linkBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
-    gap: 8,
+    borderWidth: 1,
+    borderColor: '#d1e5fd',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 0,
+    marginBottom: 14,
+    width: 340,
+    backgroundColor: '#f9fbfe',
+    justifyContent: 'center',
   },
   favicon: {
-    width: 16,
-    height: 16,
-    marginRight: 6,
+    width: 22,
+    height: 22,
+    marginRight: 10,
+    marginLeft: 10,
   },
-  domainText: {
-    color: 'blue',
-    textDecoration: 'underline',
+  linkText: {
+    fontSize: 16,
+    color: '#0d6efd',
+    fontWeight: 500,
+    textAlign: 'center',
+  },
+  noLinksText: {
+    color: '#adb5bd',
+    textAlign: 'center',
+    marginTop: 12,
   },
 });
 
 const getFaviconUrl = (url) => {
   try {
-    const domain = new URL(url).hostname;
-    return `https://www.google.com/s2/favicons?sz=64&domain_url=${domain}`;
+    const domain = new URL(url).hostname.replace('www.', '');
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
   } catch (err) {
-    return null;
+    return '/logo192.png';
   }
 };
 
-const getDomainName = (url) => {
-  try {
-    const domain = new URL(url).hostname;
-    return domain.charAt(0).toUpperCase() + domain.slice(1).split('.')[0];
-  } catch (err) {
-    return url;
-  }
-};
-
-const ProfileCardPDF = ({ name, bio, avatarUrl, socialLinks }) => (
+const ProfileCardPDF = ({ name, username, bio, email, avatarUrl, links }) => (
   <Document>
     <Page size="A4" style={styles.page}>
-      <View style={styles.section}>
-        {avatarUrl && (
-          <Image
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 32,
-              marginBottom: 10,
-            }}
-            src={avatarUrl}
-          />
-        )}
-        <Text style={styles.heading}>{name}</Text>
-        <Text>{bio}</Text>
-      </View>
+      <View style={styles.card}>
 
-      <View style={styles.section}>
-        <Text style={{ fontSize: 14, marginBottom: 8 }}>Social Links</Text>
-        {socialLinks.map((link, index) => (
-          <View key={index} style={styles.linkRow}>
-            <Image style={styles.favicon} src={getFaviconUrl(link)} />
-            <Link style={styles.domainText} src={link}>
-              {getDomainName(link)}
-            </Link>
-          </View>
-        ))}
+        <View style={styles.avatarBorder}>
+          {avatarUrl && (
+            <Image style={styles.avatar} src={avatarUrl} />
+          )}
+        </View>
+        <Text style={styles.name}>{name}</Text>
+        <Text style={styles.username}>@{username}</Text>
+        {bio && <Text style={styles.bio}>{bio}</Text>}
+        {email && <Text style={styles.email}>{email}</Text>}
+        <View style={styles.hr} />
+        <View style={styles.linksSection}>
+          {links && links.length > 0 ? (
+            links.map((link, index) => (
+              <View key={index} style={styles.linkBox}>
+                <Image style={styles.favicon} src='logo192.png' />
+                <Link style={styles.linkText} src={link.url}>
+                  {link.name}
+                </Link>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noLinksText}>No links added yet.</Text>
+          )}
+        </View>
       </View>
     </Page>
   </Document>

@@ -13,51 +13,50 @@ const Dashboard = () => {
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [avatarFile, setAvatarFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const token = localStorage.getItem('token');
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [profileRes, linksRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/users/profile', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get('http://localhost:5000/api/links', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        const profile = profileRes.data;
-        setUsername(profile.username || '');
-        setName(profile.name || '');
-        setBio(profile.bio || '');
-        setLinks(linksRes.data || []);
-
-        setAvatarUrl(`http://localhost:5000${profile.avatarUrl}`);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        if (error.response && error.response.status === 401) {
-          alert('Session expired. Please log in again.');
-          localStorage.removeItem('token');
-          window.location.href = '/login';
-        }
+  // Fetch profile and links data
+  const fetchData = async () => {
+    if (!token) return;
+    try {
+      const [profileRes, linksRes] = await Promise.all([
+        axios.get('http://localhost:5000/api/users/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get('http://localhost:5000/api/links', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+      const profile = profileRes.data;
+      setUsername(profile.username || '');
+      setName(profile.name || '');
+      setBio(profile.bio || '');
+      setLinks(linksRes.data || []);
+      setAvatarUrl(profile.avatarUrl ? `http://localhost:5000${profile.avatarUrl}` : '/images.jpg');
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      if (error.response && error.response.status === 401) {
+        alert('Session expired. Please log in again.');
+        localStorage.removeItem('token');
+        window.location.href = '/login';
       }
-    };
+    }
+  };
 
-    if (token) fetchData();
+  useEffect(() => {
+    fetchData();
   }, [token]);
 
+  // Clean up object URLs for previews
   useEffect(() => {
     return () => {
-      if (avatarFile && avatarFile.preview) {
-        URL.revokeObjectURL(avatarFile.preview);
-      }
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
-  }, [avatarFile]);
+  }, [previewUrl]);
 
   const handleAddLink = async () => {
     if (!newTitle.trim() || !newUrl.trim()) return;
-
     try {
       const res = await axios.post(
         'http://localhost:5000/api/links/add',
@@ -87,26 +86,29 @@ const Dashboard = () => {
 
   const handleSaveProfile = async () => {
     try {
+      // Update profile details
       await axios.put(
         'http://localhost:5000/api/users/profile',
         { name, bio },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      // Upload avatar if selected
       if (avatarFile) {
         const formData = new FormData();
         formData.append('avatar', avatarFile);
-
         await axios.post('http://localhost:5000/api/users/profile/avatar', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`,
           },
         });
-
-        setAvatarUrl(`http://localhost:5000${avatarUrl}`);
-        setAvatarFile(null);
       }
+
+      // Fetch profile again to get updated avatarUrl
+      await fetchData();
+      setAvatarFile(null);
+      setPreviewUrl(null);
 
       alert('Profile saved successfully!');
       setSelectedTab('profile');
@@ -166,6 +168,8 @@ const Dashboard = () => {
                 setAvatarUrl={setAvatarUrl}
                 avatarFile={avatarFile}
                 setAvatarFile={setAvatarFile}
+                previewUrl={previewUrl}
+                setPreviewUrl={setPreviewUrl}
                 handleSaveProfile={handleSaveProfile}
                 setSelectedTab={setSelectedTab}
               />

@@ -1,4 +1,4 @@
-const User = require('../models/User');
+const {User} = require('../models/User');
 
 const getProfile = async (req, res) => {
   try {
@@ -22,8 +22,10 @@ const getProfile = async (req, res) => {
       bio: user.bio,
       isPublic: user.isPublic ?? true,
       avatarUrl: `/api/users/profile/avatar/${user._id}`,
+      _id: user._id,
     });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ message: 'Server error' });
   }
 };

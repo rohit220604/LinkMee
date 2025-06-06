@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const { getProfile, updateProfile, uploadAvatar, getAvatar, deleteAvatar, getAllPublicProfiles } = require('../controllers/userController');
-const User = require('../models/User');
+const {User} = require('../models/User');
 
 const multer = require('multer'); 
 const upload = multer({ storage: multer.memoryStorage() });

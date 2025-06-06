@@ -2,14 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Modal, Button } from "react-bootstrap";
 import {
-  pdf,
-  Document,
-  Page,
-  Text,
-  Image,
-  StyleSheet,
-  View
+  pdf
 } from "@react-pdf/renderer";
+import ProfileCardPDF from "./ProfileCardPDF";
 
 // Utility: Extract domain
 function extractDomain(url) {
@@ -38,86 +33,6 @@ async function imageUrlToBase64(url) {
   }
 }
 
-// PDF styles (boxShadow removed for @react-pdf compatibility)
-const styles = StyleSheet.create({
-  page: {
-    padding: 30,
-    backgroundColor: "#f0f2f5",
-  },
-  card: {
-    backgroundColor: "#ffffff",
-    padding: 20,
-    borderRadius: 12,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    border: "1px solid #ddd"
-  },
-  image: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 15,
-  },
-  name: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  bio: {
-    fontSize: 14,
-    color: "#333",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  linkSection: {
-    width: "100%",
-    marginTop: 10,
-  },
-  subheader: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  linkRow: {
-    marginBottom: 6,
-    paddingHorizontal: 10,
-  },
-  linkText: {
-    fontSize: 12,
-    color: "#007BFF",
-    textDecoration: "none",
-  },
-});
-
-// PDF component
-const ProfileDocument = ({ user, imageBase64 }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.card}>
-        {imageBase64 && <Image style={styles.image} src={imageBase64} />}
-        <Text style={styles.name}>{user.name || user.username}</Text>
-        {user.bio && <Text style={styles.bio}>{user.bio}</Text>}
-
-        {user.links?.length > 0 && (
-          <View style={styles.linkSection}>
-            <Text style={styles.subheader}>Links</Text>
-            {user.links.map((link, idx) => (
-              <View key={idx} style={styles.linkRow}>
-                <Text style={styles.linkText}>
-                  • {link.name}: {link.url}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-    </Page>
-  </Document>
-);
-
 // Generate PDF blob
 async function generateProfileCardPDF(user) {
   let imageBase64 = "";
@@ -130,10 +45,18 @@ async function generateProfileCardPDF(user) {
   }
 
   const blob = await pdf(
-    <ProfileDocument user={user} imageBase64={imageBase64} />
+    <ProfileCardPDF
+      name={user.name || ""}
+      username={user.username || ""}
+      bio={user.bio || ""}
+      email={user.email || ""}
+      avatarUrl={imageBase64}
+      links={user.links || []}
+    />
   ).toBlob();
   return blob;
 }
+
 
 const Home = () => {
   const [publicProfiles, setPublicProfiles] = useState([]);

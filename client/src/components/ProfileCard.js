@@ -14,7 +14,6 @@ const ProfileCard = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [avatarUrl, setAvatarUrl] = useState('/images.jpg');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -26,9 +25,7 @@ const ProfileCard = () => {
       }
       try {
         const res = await axios.get('http://localhost:5000/api/users/profile', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         setProfile(res.data);
       } catch (err) {
@@ -41,37 +38,10 @@ const ProfileCard = () => {
     fetchProfile();
   }, []);
 
-  useEffect(() => {
-    if (!profile || !profile.avatarUrl) return;
-
-    let objectUrl = null;
-    const token = localStorage.getItem('token');
-
-    const fetchAvatar = async () => {
-      try {
-
-        const response = await axios.get(`http://localhost:5000${profile.avatarUrl}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          responseType: 'blob',
-        });
-        objectUrl = URL.createObjectURL(response.data);
-        setAvatarUrl(objectUrl);
-      } catch (err) {
-        console.error('Error fetching avatar:', err);
-        setAvatarUrl('/images.jpg');
-      }
-    };
-
-    fetchAvatar();
-
-    return () => {
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
-    };
-  }, [profile]);
+  // Construct avatar URL
+  const avatarUrl = profile && profile.avatarUrl
+    ? `http://localhost:5000${profile.avatarUrl}`
+    : '/images.jpg';
 
   if (loading) return <p className="text-center mt-5">Loading profile...</p>;
   if (error) return <p className="text-center mt-5 text-danger">{error}</p>;
