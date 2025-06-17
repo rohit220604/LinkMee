@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Modal, Button } from "react-bootstrap";
-import {
-  pdf
-} from "@react-pdf/renderer";
+import { pdf } from "@react-pdf/renderer";
 import ProfileCardPDF from "./ProfileCardPDF";
 
 // Utility: Extract domain
@@ -57,13 +55,15 @@ async function generateProfileCardPDF(user) {
   return blob;
 }
 
-
 const Home = () => {
   const [publicProfiles, setPublicProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchPublicProfiles = async () => {
@@ -106,6 +106,15 @@ const Home = () => {
     }
   };
 
+  // Filter profiles based on search query (by name or username)
+  const filteredProfiles = publicProfiles.filter((user) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      user.name?.toLowerCase().includes(query) ||
+      user.username?.toLowerCase().includes(query)
+    );
+  });
+
   if (loading)
     return (
       <div className="container mt-5 text-center">
@@ -125,12 +134,25 @@ const Home = () => {
 
   return (
     <div className="container mt-5">
-      <h2 className="mb-4">Public Profiles</h2>
-      {publicProfiles.length === 0 ? (
+      {/* Header row: heading left, search bar right */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="mb-0">Public Profiles</h2>
+        <div style={{ maxWidth: 400, width: "100%" }}>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search profiles..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {filteredProfiles.length === 0 ? (
         <div className="alert alert-info">No public profiles found.</div>
       ) : (
         <div className="row">
-          {publicProfiles.map((user) => (
+          {filteredProfiles.map((user) => (
             <div key={user._id} className="col-md-6 col-lg-4 mb-4">
               <div className="card h-100">
                 <div className="card-body d-flex flex-column">

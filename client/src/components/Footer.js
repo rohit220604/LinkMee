@@ -20,7 +20,7 @@ export const Footer = () => {
               <i className="bi bi-github"></i>
             </a>
             <a
-              href="https://twitter.com"
+              href="https://x.com/RohitJaliminchi"
               target="_blank"
               rel="noopener noreferrer"
               className="text-light me-3 fs-4"

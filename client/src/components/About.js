@@ -32,7 +32,7 @@ const About = () => {
         <div className="row align-items-center">
           <div className="col-md-3 text-center mb-3 mb-md-0">
             <img
-              src="/images.jpg"
+              src="/rohit.jpg"
               alt="Rohit Jaliminchi"
               className="rounded-circle"
               style={{
