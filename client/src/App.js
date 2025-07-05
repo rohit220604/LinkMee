@@ -8,6 +8,7 @@ import { Footer } from './components/Footer';
 import Dashboard from './components/Dashboard';
 import Home from './components/Home';
 import TokenHandler from './components/TokenHandler';
+import NotFound from './components/NotFound';
 
 const App = () => {
   return (
@@ -22,6 +23,7 @@ const App = () => {
             <Route path="/login" element={<Login />} /> 
             <Route path="/about" element={<About />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
         <Footer />
