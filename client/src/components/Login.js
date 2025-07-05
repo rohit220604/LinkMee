@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+const GOOGLE_AUTH_URL = 'http://localhost:5000/api/auth/google';
 const Login = () => {
   const [mode, setMode] = useState('signin');
   const [form, setForm] = useState({ email: '', username: '', password: '', newPassword: '', confirmPassword: '' });
@@ -22,12 +23,11 @@ const Login = () => {
       if (mode === 'signup') {
         if (!otpRequested) {
           // Step 1: Request OTP for signup
-          const res = await axios.post('http://localhost:5000/api/auth/register', {
+          await axios.post('http://localhost:5000/api/auth/register', {
             email: form.email,
             username: form.username,
             password: form.password,
           });
-          // Note: Your backend should send OTP to email and respond with success
           setOtpRequested(true);
           setMessage(`Check your ${form.email} for OTP.`);
         } else {
@@ -54,7 +54,7 @@ const Login = () => {
       } else if (mode === 'forgot') {
         if (!otpRequested) {
           // Step 1: Request OTP for password reset
-          const res = await axios.post('http://localhost:5000/api/auth/send-reset-otp', {
+          await axios.post('http://localhost:5000/api/auth/send-reset-otp', {
             email: form.email,
           });
           setOtpRequested(true);
@@ -100,6 +100,11 @@ const Login = () => {
     setOtpRequested(false);
     setOtpVerified(false);
     setMessage('');
+  };
+
+  // Google OAuth handler
+  const handleGoogleLogin = () => {
+    window.location.href = GOOGLE_AUTH_URL;
   };
 
   return (
@@ -162,8 +167,6 @@ const Login = () => {
                       disabled={otpRequested}
                     />
                   </div>
-
-                  {/* OTP Box - Only shown after first click */}
                   {otpRequested && (
                     <div className="form-group mb-4">
                       <label className="fs-5">OTP (One-Time Password)</label>
@@ -182,7 +185,7 @@ const Login = () => {
                 </>
               )}
 
-              {(mode === 'signin') && (
+              {mode === 'signin' && (
                 <>
                   <div className="form-group mb-4">
                     <label className="fs-5">Email address</label>
@@ -226,13 +229,11 @@ const Login = () => {
                       disabled={otpRequested}
                     />
                   </div>
-                  {/* Step 1: Request OTP */}
                   {!otpRequested && (
                     <button type="submit" className="btn btn-primary btn-lg w-100 mt-4">
                       Send Reset Link
                     </button>
                   )}
-                  {/* Step 2: Verify OTP */}
                   {otpRequested && !otpVerified && (
                     <>
                       <div className="form-group mb-4">
@@ -252,7 +253,6 @@ const Login = () => {
                       </button>
                     </>
                   )}
-                  {/* Step 3: Set new password */}
                   {otpVerified && (
                     <>
                       <div className="form-group mb-4">
@@ -287,12 +287,34 @@ const Login = () => {
                 </>
               )}
 
-              {(mode !== 'forgot') && (
+              {mode !== 'forgot' && (
                 <button type="submit" className="btn btn-primary btn-lg w-100 mt-4">
                   {mode === 'signup' ? (otpRequested ? 'Sign Up' : 'Register') : 'Login'}
                 </button>
               )}
             </form>
+
+            {/* Google OAuth Button */}
+            {mode === 'signin' && (
+              <div className="text-center my-3">
+                <button
+                  type="button"
+                  className="btn btn-outline-danger btn-lg w-100"
+                  onClick={handleGoogleLogin}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 48 48" style={{ marginRight: 8 }}>
+                    <g>
+                      <path fill="#4285F4" d="M43.6 20.5h-1.9V20H24v8h11.3c-1.6 4.3-5.7 7-11.3 7-6.6 0-12-5.4-12-12s5.4-12 12-12c2.7 0 5.2.9 7.2 2.4l6-6C34.1 5.1 29.3 3 24 3 12.9 3 4 11.9 4 23s8.9 20 20 20c11 0 19.7-8 19.7-20 0-1.3-.1-2.5-.3-3.5z"/>
+                      <path fill="#34A853" d="M6.3 14.7l6.6 4.8C14.3 16.1 18.7 13 24 13c2.7 0 5.2.9 7.2 2.4l6-6C34.1 5.1 29.3 3 24 3c-7.7 0-14.3 4.3-17.7 10.7z"/>
+                      <path fill="#FBBC05" d="M24 43c5.3 0 10.1-1.8 13.8-4.9l-6.4-5c-2 1.4-4.5 2.2-7.4 2.2-5.6 0-10.3-3.7-12-8.7l-6.6 5.1C9.7 39.7 16.3 43 24 43z"/>
+                      <path fill="#EA4335" d="M43.6 20.5h-1.9V20H24v8h11.3c-1.1 3-3.5 5.4-6.3 6.7l6.4 5C40.7 36.1 44 30.3 44 23c0-1.3-.1-2.5-.4-3.5z"/>
+                    </g>
+                  </svg>
+                  Sign in with Google
+                </button>
+              </div>
+            )}
 
             {/* Toggle Modes */}
             <div className="text-center mt-4">

@@ -181,5 +181,6 @@ module.exports = {
   verifySignupOtp,
   sendPasswordResetOtp,
   resetPassword,
-  loginUser
+  loginUser,
+  generateToken
 };

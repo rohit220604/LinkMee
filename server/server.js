@@ -2,6 +2,10 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
+const passport = require('passport');
+
+
+require('./config/googleAuth');
 
 const app = express();
 
@@ -15,7 +19,8 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// Routes
+app.use(passport.initialize());
+
 const userRoutes = require('./routes/userRoutes');
 const linkRoutes = require('./routes/linkRoutes');
 const authRoutes = require('./routes/authRoutes');
