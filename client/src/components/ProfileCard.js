@@ -24,7 +24,7 @@ const ProfileCard = () => {
         return;
       }
       try {
-        const res = await axios.get('http://localhost:5000/api/users/profile', {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setProfile(res.data);
@@ -40,7 +40,7 @@ const ProfileCard = () => {
 
   // Construct avatar URL
   const avatarUrl = profile && profile.avatarUrl
-    ? `http://localhost:5000${profile.avatarUrl}`
+    ? `${process.env.REACT_APP_API_URL}${profile.avatarUrl}`
     : '/images.jpg';
 
   if (loading) return <p className="text-center mt-5">Loading profile...</p>;

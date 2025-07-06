@@ -107,7 +107,7 @@ const sendPasswordResetOtp = async (req, res) => {
 
     // Generate and send OTP
     const otp = crypto.randomInt(100000, 999999).toString();
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     
     await Otp.findOneAndUpdate(
       { email, purpose: 'reset' },

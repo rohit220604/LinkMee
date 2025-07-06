@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const GOOGLE_AUTH_URL = 'http://localhost:5000/api/auth/google';
+const GOOGLE_AUTH_URL = `${process.env.REACT_APP_API_URL}/api/auth/google`;
 const Login = () => {
   const [mode, setMode] = useState('signin');
   const [form, setForm] = useState({ email: '', username: '', password: '', newPassword: '', confirmPassword: '' });
@@ -23,7 +23,7 @@ const Login = () => {
       if (mode === 'signup') {
         if (!otpRequested) {
           // Step 1: Request OTP for signup
-          await axios.post('http://localhost:5000/api/auth/register', {
+          await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/register`, {
             email: form.email,
             username: form.username,
             password: form.password,
@@ -32,7 +32,7 @@ const Login = () => {
           setMessage(`Check your ${form.email} for OTP.`);
         } else {
           // Step 2: Verify OTP and complete registration
-          const res = await axios.post('http://localhost:5000/api/auth/verify-signup-otp', {
+          const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/verify-signup-otp`, {
             email: form.email,
             otp: otp,
           });
@@ -43,7 +43,7 @@ const Login = () => {
         }
       } else if (mode === 'signin') {
         // Login
-        const res = await axios.post('http://localhost:5000/api/auth/login', {
+        const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, {
           email: form.email,
           password: form.password,
         });
@@ -54,14 +54,14 @@ const Login = () => {
       } else if (mode === 'forgot') {
         if (!otpRequested) {
           // Step 1: Request OTP for password reset
-          await axios.post('http://localhost:5000/api/auth/send-reset-otp', {
+          await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/send-reset-otp`, {
             email: form.email,
           });
           setOtpRequested(true);
           setMessage(`Check your ${form.email} for OTP.`);
         } else if (!otpVerified) {
           // Step 2: Verify OTP for password reset
-          const res = await axios.post('http://localhost:5000/api/auth/verify-otp-reset', {
+          const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/verify-otp-reset`, {
             email: form.email,
             otp: otp,
           });
@@ -77,7 +77,7 @@ const Login = () => {
             setMessage('Passwords do not match.');
             return;
           }
-          const res = await axios.post('http://localhost:5000/api/auth/reset-password', {
+          const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/reset-password`, {
             email: form.email,
             otp: otp,
             newPassword: form.newPassword,

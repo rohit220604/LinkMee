@@ -21,10 +21,10 @@ const Dashboard = () => {
     if (!token) return;
     try {
       const [profileRes, linksRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/users/profile', {
+        axios.get(`${process.env.REACT_APP_API_URL}/api/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get('http://localhost:5000/api/links', {
+        axios.get(`${process.env.REACT_APP_API_URL}/api/links`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -33,7 +33,7 @@ const Dashboard = () => {
       setName(profile.name || '');
       setBio(profile.bio || '');
       setLinks(linksRes.data || []);
-      setAvatarUrl(profile.avatarUrl ? `http://localhost:5000${profile.avatarUrl}` : '/images.jpg');
+      setAvatarUrl(profile.avatarUrl ? `${process.env.REACT_APP_API_URL}${profile.avatarUrl}` : '/images.jpg');
     } catch (error) {
       console.error('Error fetching data:', error);
       if (error.response && error.response.status === 401) {
@@ -59,7 +59,7 @@ const Dashboard = () => {
     if (!newTitle.trim() || !newUrl.trim()) return;
     try {
       const res = await axios.post(
-        'http://localhost:5000/api/links/add',
+        `${process.env.REACT_APP_API_URL}/api/links/add`,
         { name: newTitle, url: newUrl },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -74,7 +74,7 @@ const Dashboard = () => {
 
   const handleDeleteLink = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/links/${id}`, {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/links/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setLinks(links.filter((link) => link._id !== id));
@@ -88,7 +88,7 @@ const Dashboard = () => {
     try {
       // Update profile details
       await axios.put(
-        'http://localhost:5000/api/users/profile',
+        `${process.env.REACT_APP_API_URL}/api/users/profile`,
         { name, bio },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -97,7 +97,7 @@ const Dashboard = () => {
       if (avatarFile) {
         const formData = new FormData();
         formData.append('avatar', avatarFile);
-        await axios.post('http://localhost:5000/api/users/profile/avatar', formData, {
+        await axios.post(`${process.env.REACT_APP_API_URL}/api/users/profile/avatar`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`,

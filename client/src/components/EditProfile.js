@@ -21,7 +21,7 @@ const EditProfile = () => {
   const fetchProfile = async () => {
     if (!token) return;
     try {
-      const res = await axios.get('http://localhost:5000/api/users/profile', {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setName(res.data.name || '');
@@ -29,7 +29,7 @@ const EditProfile = () => {
       setIsPublic(res.data.isPublic ?? true);
       setAvatarUrl(
         res.data.avatarUrl
-          ? `http://localhost:5000${res.data.avatarUrl}`
+          ? `${process.env.REACT_APP_API_URL}${res.data.avatarUrl}`
           : '/images.jpg'
       );
     } catch (err) {
@@ -61,7 +61,7 @@ const EditProfile = () => {
       const formData = new FormData();
       formData.append('avatar', selectedFile);
 
-      await axios.post('http://localhost:5000/api/users/profile/avatar', formData, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/users/profile/avatar`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
@@ -86,7 +86,7 @@ const EditProfile = () => {
     setDeleting(true);
     setMessage(null);
     try {
-      await axios.delete('http://localhost:5000/api/users/profile/avatar', {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/users/profile/avatar`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -111,7 +111,7 @@ const EditProfile = () => {
       if (selectedFile) {
         const formData = new FormData();
         formData.append('avatar', selectedFile);
-        await axios.post('http://localhost:5000/api/users/profile/avatar', formData, {
+        await axios.post(`${process.env.REACT_APP_API_URL}/api/users/profile/avatar`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
@@ -120,7 +120,7 @@ const EditProfile = () => {
       }
       
       await axios.put(
-        'http://localhost:5000/api/users/profile',
+        `${process.env.REACT_APP_API_URL}/api/users/profile`,
         { name, bio, isPublic },
         { headers: { Authorization: `Bearer ${token}` } }
       );

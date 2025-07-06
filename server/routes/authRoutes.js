@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 
-console.log('Auth routes loaded'); 
+// console.log('Auth routes loaded'); 
 const passport = require('passport');
 
 router.post('/register', (req, res, next) => {
-  console.log('Register route hit'); 
+  // console.log('Register route hit'); 
   authController.registerUser(req, res, next);
 });
 
@@ -26,7 +26,7 @@ router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' ,session: false}),
   (req, res) => {
     const token = authController.generateToken(req.user);
-    res.redirect(`http://localhost:3000/auth/callback?token=${token}`);
+    res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}`);
   }
 );
 

@@ -36,7 +36,7 @@ async function generateProfileCardPDF(user) {
   let imageBase64 = "";
   try {
     imageBase64 = await imageUrlToBase64(
-      `http://localhost:5000/api/users/profile/avatar/${user._id}`
+      `${process.env.REACT_APP_API_URL}/api/users/profile/avatar/${user._id}`
     );
   } catch (e) {
     console.error("Could not load image:", e);
@@ -69,7 +69,7 @@ const Home = () => {
     const fetchPublicProfiles = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:5000/api/users/public-profiles"
+          `${process.env.REACT_APP_API_URL}/api/users/public-profiles`
         );
         setPublicProfiles(res.data);
       } catch (err) {
@@ -158,7 +158,7 @@ const Home = () => {
                 <div className="card-body d-flex flex-column">
                   <div className="text-center mb-3">
                     <img
-                      src={`http://localhost:5000/api/users/profile/avatar/${user._id}`}
+                      src={`${process.env.REACT_APP_API_URL}/api/users/profile/avatar/${user._id}`}
                       alt={user.name || user.username}
                       className="rounded-circle shadow"
                       style={{
@@ -256,7 +256,7 @@ const Home = () => {
         >
           <div className="text-center mb-4">
             <img
-              src={`http://localhost:5000/api/users/profile/avatar/${selectedUser?._id}`}
+              src={`${process.env.REACT_APP_API_URL}/api/users/profile/avatar/${selectedUser?._id}`}
               alt={selectedUser?.name || selectedUser?.username}
               className="rounded-circle shadow"
               style={{

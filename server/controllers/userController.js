@@ -25,7 +25,6 @@ const getProfile = async (req, res) => {
       _id: user._id,
     });
   } catch (error) {
-    console.log(error)
     res.status(500).json({ message: 'Server error' });
   }
 };
