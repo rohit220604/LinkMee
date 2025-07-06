@@ -113,15 +113,6 @@ const styles = StyleSheet.create({
   },
 });
 
-const getFaviconUrl = (url) => {
-  try {
-    const domain = new URL(url).hostname.replace('www.', '');
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
-  } catch (err) {
-    return '/logo192.png';
-  }
-};
-
 const ProfileCardPDF = ({ name, username, bio, email, avatarUrl, links }) => (
   <Document>
     <Page size="A4" style={styles.page}>

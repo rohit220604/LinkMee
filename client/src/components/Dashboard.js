@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ProfileCard from './ProfileCard';
 import axios from 'axios';
 import EditProfile from './EditProfile';
@@ -16,8 +16,8 @@ const Dashboard = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const token = localStorage.getItem('token');
 
-  // Fetch profile and links data
-  const fetchData = async () => {
+  // FIXED: Memoized fetchData with useCallback
+  const fetchData = useCallback(async () => {
     if (!token) return;
     try {
       const [profileRes, linksRes] = await Promise.all([
@@ -42,11 +42,11 @@ const Dashboard = () => {
         window.location.href = '/login';
       }
     }
-  };
+  }, [token]); 
 
   useEffect(() => {
     fetchData();
-  }, [token]);
+  }, [fetchData]);
 
   // Clean up object URLs for previews
   useEffect(() => {

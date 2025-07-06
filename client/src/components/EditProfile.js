@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const EditProfile = () => {
@@ -11,14 +11,13 @@ const EditProfile = () => {
   const [isPublic, setIsPublic] = useState(true);
 
   const [message, setMessage] = useState(null);
-  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const token = localStorage.getItem('token');
 
-  // Fetch profile data
-  const fetchProfile = async () => {
+  // Memoize fetchProfile with useCallback
+  const fetchProfile = useCallback(async () => {
     if (!token) return;
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/profile`, {
@@ -35,14 +34,14 @@ const EditProfile = () => {
     } catch (err) {
       console.error('Error fetching profile:', err);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchProfile();
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
-  }, [token]);
+  }, [fetchProfile, previewUrl]);
 
   const handleFileChange = (e) => {
     setMessage(null);
@@ -50,34 +49,6 @@ const EditProfile = () => {
       const file = e.target.files[0];
       setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!selectedFile) return;
-    setUploading(true);
-    setMessage(null);
-    try {
-      const formData = new FormData();
-      formData.append('avatar', selectedFile);
-
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/users/profile/avatar`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      // Refresh profile to get updated avatarUrl
-      await fetchProfile();
-      setSelectedFile(null);
-      setPreviewUrl(null);
-      setMessage('Profile photo uploaded successfully.');
-    } catch (err) {
-      console.error('Upload failed:', err);
-      setMessage('Failed to upload profile photo. Please try again.');
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -118,7 +89,7 @@ const EditProfile = () => {
           },
         });
       }
-      
+
       await axios.put(
         `${process.env.REACT_APP_API_URL}/api/users/profile`,
         { name, bio, isPublic },
